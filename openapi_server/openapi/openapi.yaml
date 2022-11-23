@@ -1,0 +1,128 @@
+openapi: 3.0.1
+info:
+  description: |
+    SyskenGachaのバックエンド。
+  title: SyskenGacha-backend
+  version: 1.0.0
+servers:
+- url: /
+paths:
+  /gacha:
+    get:
+      description: ガチャにて排出される全アイテムのリスト
+      operationId: gacha_get
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GachaItem'
+          description: 正常時のレスポンス
+      summary: ガチャリスト
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /gacha/{ItemId}:
+    get:
+      description: ガチャアイテム
+      operationId: gacha_item_id_get
+      parameters:
+      - description: ガチャID
+        explode: false
+        in: path
+        name: ItemId
+        required: true
+        schema:
+          format: int64
+          type: integer
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GachaList'
+          description: 正常なレスポンス
+      summary: ガチャアイテム
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /random/:
+    get:
+      description: ランダムなガチャアイテム
+      operationId: random_get
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GachaItem'
+          description: 正常なレスポンス
+      summary: ランダムなガチャアイテム
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /static/{PictId}:
+    get:
+      description: 指定されたIdの画像を返却します
+      operationId: static_pict_id_get
+      parameters:
+      - description: 取得したい画像の連番ID
+        explode: false
+        in: path
+        name: PictId
+        required: true
+        schema:
+          format: int64
+          type: integer
+        style: simple
+      responses:
+        "200":
+          content:
+            image/jpg:
+              schema:
+                format: binary
+                type: string
+                x-content-type: image/jpg
+          description: 存在時のレスポンス
+      summary: 画像
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+components:
+  schemas:
+    GachaItem:
+      example:
+        pictId: 6
+        name: name
+        id: 0
+        rarity: 1
+      properties:
+        id:
+          format: int64
+          title: id
+          type: integer
+        name:
+          title: name
+          type: string
+        pictId:
+          format: int64
+          title: pictId
+          type: integer
+        rarity:
+          format: int64
+          title: rarity
+          type: integer
+      title: GachaItem
+      type: object
+    GachaList:
+      example:
+        gachaList:
+        - pictId: 6
+          name: name
+          id: 0
+          rarity: 1
+        - pictId: 6
+          name: name
+          id: 0
+          rarity: 1
+      properties:
+        gachaList:
+          items:
+            $ref: '#/components/schemas/GachaItem'
+          title: gachaList
+          type: array
+      title: GachaList
+      type: object
