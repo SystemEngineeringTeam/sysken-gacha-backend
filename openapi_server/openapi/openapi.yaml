@@ -5,7 +5,7 @@ info:
   title: SyskenGacha-backend
   version: 1.0.0
 servers:
-- url: /
+- url: /backend/
 paths:
   /gacha:
     get:
