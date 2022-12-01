@@ -5,7 +5,7 @@ if [ $# -ne 1 ]; then
 	echo "使用方法: $0 <C#のコードの場所>"
 fi
 source .env
-if [ ! -e $2 ]; then
+if [ ! -e $DB_PATH ]; then
 	echo "Destination $DB_PATH does not exist. Creating..."
 	sqlite3 $DB_PATH "
   CREATE TABLE IF NOT EXISTS items(
@@ -19,7 +19,7 @@ CURRENT=$(cd $(dirname "$0") && pwd)
 echo "Migrating from $1 to $DB_PATH"
 echo "Current directory: $CURRENT"
 cat $1 | sed -r -f $CURRENT/replace.sed | nl -s '' -nln | sed 's/  */,/g' >csv
-sqlite3 $DB_DB_PATH ".mode csv" \
+sqlite3 $DB_PATH ".mode csv" \
 	".import ./csv items" \
-	"update items set image = '${3}resource (' || id || ').jpg' "
+	"update items set image = 'resource (' || id || ').jpg' "
 echo "INFO:データが 1列 足りない と出るのは仕様です。実際には挿入されています"
