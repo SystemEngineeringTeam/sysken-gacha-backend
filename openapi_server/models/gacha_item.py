@@ -15,7 +15,7 @@ class GachaItem(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, id=None, name=None, pict_id=None, rarity=None):  # noqa: E501
+    def __init__(self, id=None, name=None, pict_id=None, rare=None):  # noqa: E501
         """GachaItem - a model defined in OpenAPI
 
         :param id: The id of this GachaItem.  # noqa: E501
@@ -23,28 +23,28 @@ class GachaItem(Model):
         :param name: The name of this GachaItem.  # noqa: E501
         :type name: str
         :param pict_id: The pict_id of this GachaItem.  # noqa: E501
-        :type pict_id: int
-        :param rarity: The rarity of this GachaItem.  # noqa: E501
-        :type rarity: int
+        :type pict_id: str
+        :param rare: The rare of this GachaItem.  # noqa: E501
+        :type rare: int
         """
         self.openapi_types = {
             'id': int,
             'name': str,
-            'pict_id': int,
-            'rarity': int
+            'pict_id': str,
+            'rare': int
         }
 
         self.attribute_map = {
             'id': 'id',
             'name': 'name',
             'pict_id': 'pictId',
-            'rarity': 'rarity'
+            'rare': 'rare'
         }
 
         self._id = id
         self._name = name
         self._pict_id = pict_id
-        self._rarity = rarity
+        self._rare = rare
 
     @classmethod
     def from_dict(cls, dikt) -> 'GachaItem':
@@ -105,7 +105,7 @@ class GachaItem(Model):
 
 
         :return: The pict_id of this GachaItem.
-        :rtype: int
+        :rtype: str
         """
         return self._pict_id
 
@@ -115,28 +115,28 @@ class GachaItem(Model):
 
 
         :param pict_id: The pict_id of this GachaItem.
-        :type pict_id: int
+        :type pict_id: str
         """
 
         self._pict_id = pict_id
 
     @property
-    def rarity(self):
-        """Gets the rarity of this GachaItem.
+    def rare(self):
+        """Gets the rare of this GachaItem.
 
 
-        :return: The rarity of this GachaItem.
+        :return: The rare of this GachaItem.
         :rtype: int
         """
-        return self._rarity
+        return self._rare
 
-    @rarity.setter
-    def rarity(self, rarity):
-        """Sets the rarity of this GachaItem.
+    @rare.setter
+    def rare(self, rare):
+        """Sets the rare of this GachaItem.
 
 
-        :param rarity: The rarity of this GachaItem.
-        :type rarity: int
+        :param rare: The rare of this GachaItem.
+        :type rare: int
         """
 
-        self._rarity = rarity
+        self._rare = rare

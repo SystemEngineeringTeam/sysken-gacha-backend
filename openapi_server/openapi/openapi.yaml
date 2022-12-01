@@ -43,7 +43,7 @@ paths:
           description: 正常なレスポンス
       summary: ガチャアイテム
       x-openapi-router-controller: openapi_server.controllers.default_controller
-  /random/:
+  /gacha/random/:
     get:
       description: ランダムなガチャアイテム
       operationId: random_get
@@ -56,7 +56,7 @@ paths:
           description: 正常なレスポンス
       summary: ランダムなガチャアイテム
       x-openapi-router-controller: openapi_server.controllers.default_controller
-  /static/{PictId}:
+  /gacha/static/{PictId}:
     get:
       description: 指定されたIdの画像を返却します
       operationId: static_pict_id_get
@@ -72,14 +72,135 @@ paths:
         style: simple
       responses:
         "200":
+          description: 存在時のレスポンス
           content:
             image/jpg:
               schema:
                 format: binary
                 type: string
                 x-content-type: image/jpg
-          description: 存在時のレスポンス
+
       summary: 画像
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /admin/item:
+    put:
+      description: アイテムの編集
+      operationId: admin_item_put
+      parameters:
+      - description: ID
+        explode: false
+        in: query
+        name: id
+        required: true
+        schema:
+          format: int64
+          type: integer
+      - description: アイテム名
+        explode: false
+        in: query
+        name: name
+        required: true
+        schema:
+          type: string
+      - description: レアリティ
+        explode: false
+        in: query
+        name: rare
+        required: true
+        schema:
+          type: integer
+      - description: 画像ID
+        explode: false
+        in: query
+        name: image
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GachaItem'
+          description: 正常なレスポンス
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GachaItem'
+          description: リクエストが不正な場合
+      x-openapi-router-controller: openapi_server.controllers.security_controller
+    post:
+      description: アイテムの追加
+      operationId: admin_item_post
+      parameters:
+      - description: アイテム名
+        explode: false
+        in: query
+        name: name
+        required: true
+        schema:
+          type: string
+      - description: レアリティ
+        explode: false
+        in: query
+        name: rare
+        required: true
+        schema:
+          format: int64
+          type: integer
+      - description: 画像ID
+        explode: false
+        in: query
+        name: image
+        required: false
+        schema:
+          type: string
+      responses:
+          "200":
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/GachaItem'
+            description: 正常なレスポンス
+          "400":
+            content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/GachaItem'
+            description: リクエストが不正な場合
+      x-openapi-router-controller: openapi_server.controllers.security_controller
+  /admin/upload:
+    post:
+      description: 画像のアップロード
+      operationId: admin_upload_post
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              properties:
+                file:
+                  format: binary
+                  type: string
+                  x-content-type: image/jpg
+                name:
+                  type: string
+              type: object
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GachaItem'
+          description: 正常なレスポンス
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GachaItem'
+          description: リクエストが不正な場合
       x-openapi-router-controller: openapi_server.controllers.default_controller
 components:
   schemas:
@@ -88,7 +209,7 @@ components:
         pictId: 6
         name: name
         id: 0
-        rarity: 1
+        rare: 1
       properties:
         id:
           format: int64
@@ -100,10 +221,10 @@ components:
         pictId:
           format: int64
           title: pictId
-          type: integer
-        rarity:
+          type: string
+        rare:
           format: int64
-          title: rarity
+          title: rare
           type: integer
       title: GachaItem
       type: object
@@ -113,11 +234,11 @@ components:
         - pictId: 6
           name: name
           id: 0
-          rarity: 1
+          rare: 1
         - pictId: 6
           name: name
           id: 0
-          rarity: 1
+          rare: 1
       properties:
         gachaList:
           items:
@@ -126,3 +247,4 @@ components:
           type: array
       title: GachaList
       type: object
+
