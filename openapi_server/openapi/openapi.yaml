@@ -201,7 +201,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/GachaItem'
           description: リクエストが不正な場合
-      x-openapi-router-controller: openapi_server.controllers.default_controller
+      x-openapi-router-controller: openapi_server.controllers.security_controller
 components:
   schemas:
     GachaItem:

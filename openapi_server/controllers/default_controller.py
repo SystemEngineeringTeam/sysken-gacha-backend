@@ -10,6 +10,7 @@ from openapi_server import util
 
 from dotenv import load_dotenv
 import os
+import urllib3
 
 from openapi_server.db import get_db, close_db, DB_schema
 
@@ -66,13 +67,22 @@ def static_pict_id_get(pict_id) :  # noqa: E501
 
     :rtype: Union[file, Tuple[file, int], Tuple[file, int, Dict[str, str]]
     """
+    headers = {
+        'Accept-Encoding': 'gzip, deflate, br'
+    }
     db = get_db()
+    source = db.execute('select source from items where id = ?', [pict_id]).fetchone()[0]
     cur = db.execute('select image from items where id = ?', [pict_id])
     img_path = cur.fetchone()[0]
-    file = open(
-        os.path.join(os.environ['IMG_DIR'], img_path),
-        'rb')
-    return file.read()
+    if source =='local':
+        file = open(
+            os.path.join(os.environ['IMG_DIR'], img_path),
+            'rb')
+        return file.read()
+    elif source == 'url':
+        file = urllib3.PoolManager().request('GET', img_path, headers=headers)
+        return file.data
+
 def random_get() -> GachaItem:  # noqa: E501
     """ランダムガチャ
 
@@ -85,52 +95,3 @@ def random_get() -> GachaItem:  # noqa: E501
     item = {DB_schema[i]: row[i]
                for i in range(len(DB_schema))}
     return item
-def admin_item_put(id, name, rare, image) -> GachaItem:  # noqa: E501
-    """アイテム追加
-
-    アイテム追加 # noqa: E501
-
-    :param name: アイテム名
-    :type id: int
-    :type name: str
-    :type rare: int
-    :type image: str
-
-    :rtype: Union[GachaItem, Tuple[GachaItem, int], Tuple[GachaItem, int, Dict[str, str]]:
-    """
-    db = get_db()
-    cur = db.execute('update items set description = ?, rare = ?, image = ? where id = ?',
-                     [name, rare, image, id])
-    db.commit()
-    cur_get = db.execute('select * from items where id = ?', [id])
-    row = cur_get.fetchone()
-    item: GachaItem = {DB_schema[i]: row[i] for i in range(len(DB_schema))}
-    return item
-
-
-def admin_item_post(name, rare, image) -> dict:  # noqa: E501
-    db = get_db()
-    max_id: int = db.execute('select max(id) from items').fetchone()[0]
-    cur = db.execute('insert into items (id, description, rare, image) values (?,?,?,?)',
-                     [max_id + 1, name, rare, image])
-    db.commit()
-    getcur = db.execute('select * from items where id = ?', [max_id + 1])
-    row = getcur.fetchone()
-    item = {DB_schema[i]: row[i] for i in range(len(DB_schema))}
-    return item
-
-
-def admin_upload_post(file) -> Union[dict,str]:  # noqa: E501
-    """画像アップロード
-
-    画像アップロード # noqa: E501
-
-    :param file: 画像ファイル
-    :type file: werkzeug.datastructures.FileStorage
-    """
-    if file.filename == '':
-        return 'No selected file'
-    elif file:
-        filename = file.filename
-        file.save(os.path.join(os.environ['IMG_DIR'], filename))
-        return {'status': 'success'}

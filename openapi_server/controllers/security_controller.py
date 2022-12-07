@@ -36,7 +36,7 @@ def admin_item_put(id, name, rare, image) -> GachaItem:  # noqa: E501
     return item
 
 
-def admin_item_post(name, rare, *rest) -> dict:  # noqa: E501
+def admin_item_post(name, rare, **rest) -> dict:  # noqa: E501
     """アイテム追加
 
     アイテム追加 # noqa: E501
@@ -49,12 +49,18 @@ def admin_item_post(name, rare, *rest) -> dict:  # noqa: E501
     """
     db = get_db()
     max_id: int = db.execute('select max(id) from items').fetchone()[0]
-    if not rest or not rest[0]:
+    print(rest)
+    if not rest or not rest['image']:
+
+        print('not rest:' + 'true' if (not rest) else 'false'
+                          + '\nnot rest[0]:' + 'true' if (not rest['image']) else 'false')
         cur = db.execute('insert into items (id, description, rare) values (?,?,?)',
                          [max_id + 1, name, rare])
     else:
-        cur = db.execute('insert into items (id, description, rare, image) values (?,?,?,?)',
-                         [max_id + 1, name, rare, rest[0]])
+        source = 'url' if rest['image'][:8] == 'https://' \
+            or rest['image'][:7] == 'http://' else 'local'
+        cur = db.execute('insert into items (id, description, rare, image, source) values (?,?,?,?,?)',
+                         [max_id + 1, name, rare, rest['image'], source])
     db.commit()
     getcur = db.execute('select * from items where id = ?', [max_id + 1])
     row = getcur.fetchone()
