@@ -25,3 +25,14 @@ def close_db(e=None):
 print(os.getcwd())
 DB_schema = ["id", "desc", "rare", "image"]
 
+
+def setup_db():
+    DB_PATH = os.environ['DB_PATH']
+    db = sqlite3.connect(DB_PATH)
+    cur = db.execute('''
+    CREATE TABLE IF NOT EXISTS users(
+        id INTEGER PRIMARY KEY,
+        user_id TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL 
+    );''')
+

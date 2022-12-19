@@ -1,25 +1,31 @@
+import bcrypt
 import connexion
 import os
 from typing import List
+import base64
+
+import six
 
 from openapi_server.models.gacha_item import GachaItem  # noqa: E501
 # from openapi_server.models.gacha_list import GachaList  # noqa: E501
 # from openapi_server import util
+from openapi_server.controllers.token import generate_token
 
 from openapi_server.db import get_db, close_db, DB_schema
 from dotenv import load_dotenv
 from typing import Union
+from werkzeug.exceptions import BadRequest
 
 load_dotenv()
 
 
-def admin_item_put(id, name, rare, image) -> GachaItem:  # noqa: E501
+def admin_item_put(item_id, name, rare, image, **rest) -> GachaItem:  # noqa: E501
     """アイテム更新
 
     アイテム追加 # noqa: E501
 
     :param name: アイテム名
-    :type id: int
+    :type item_id: int
     :type name: str
     :type rare: int
     :type image: str
@@ -28,9 +34,9 @@ def admin_item_put(id, name, rare, image) -> GachaItem:  # noqa: E501
     """
     db = get_db()
     cur = db.execute('update items set description = ?, rare = ?, image = ? where id = ?',
-                     [name, rare, image, id])
+                     [name, rare, image, item_id])
     db.commit()
-    cur_get = db.execute('select * from items where id = ?', [id])
+    cur_get = db.execute('select * from items where id = ?', [item_id])
     row = cur_get.fetchone()
     item: GachaItem = {DB_schema[i]: row[i] for i in range(len(DB_schema))}
     return item
@@ -47,18 +53,19 @@ def admin_item_post(name, rare, **rest) -> dict:  # noqa: E501
     :type rare: int
     :param rest: 非要求引数(0:画像パス)
     """
+    print(rest)
     db = get_db()
     max_id: int = db.execute('select max(id) from items').fetchone()[0]
     print(rest)
     if not rest or not rest['image']:
 
         print('not rest:' + 'true' if (not rest) else 'false'
-                          + '\nnot rest[0]:' + 'true' if (not rest['image']) else 'false')
+                                                      + '\nnot rest[0]:' + 'true' if (not rest['image']) else 'false')
         cur = db.execute('insert into items (id, description, rare) values (?,?,?)',
                          [max_id + 1, name, rare])
     else:
         source = 'url' if rest['image'][:8] == 'https://' \
-            or rest['image'][:7] == 'http://' else 'local'
+                          or rest['image'][:7] == 'http://' else 'local'
         cur = db.execute('insert into items (id, description, rare, image, source) values (?,?,?,?,?)',
                          [max_id + 1, name, rare, rest['image'], source])
     db.commit()
@@ -68,7 +75,7 @@ def admin_item_post(name, rare, **rest) -> dict:  # noqa: E501
     return item
 
 
-def admin_upload_post(file) -> Union[dict, str]:  # noqa: E501
+def admin_upload_post(file):  # noqa: E501
     """画像アップロード
 
     画像アップロード # noqa: E501
@@ -82,3 +89,26 @@ def admin_upload_post(file) -> Union[dict, str]:  # noqa: E501
         filename = file.filename
         file.save(os.path.join(os.environ['IMG_DIR'], filename))
         return {'status': 'success'}
+
+
+def auth_user_id_post(user_id, body) -> Union[dict, str]:  # noqa: E501
+    """ユーザー情報取得
+
+    ユーザー情報取得 # noqa: E501
+
+    :param user_id: ユーザーID
+    :param body:
+    """
+    print(body, type(body), len(body), body.keys())
+    db = get_db()
+    column = db.execute('select user_id,password from users where user_id = (?) limit 1', [user_id]).fetchone()
+    print(column)
+    if bcrypt.checkpw(body['password'].encode('utf-8'), column[1].encode()):
+        return generate_token(user_id)
+    else:
+        six.raise_from(BadRequest, None)
+
+
+def bcrypt_get(source):
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(source.encode('utf-8'), salt).decode()

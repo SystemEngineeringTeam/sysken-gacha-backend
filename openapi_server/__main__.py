@@ -1,10 +1,25 @@
 #!/usr/bin/env python3
+import os
 
 import connexion
+from dotenv import load_dotenv
+from flask import logging
 
 from openapi_server import encoder
+from openapi_server.db import setup_db
 
-#added from https://github.com/spec-first/connexion/blob/main/examples/openapi3/reverseproxy/app.py
+load_dotenv()
+try:
+    test = os.environ["JWT_SECRET"]
+except KeyError:
+    print("JWT_SECRET を設定してください")
+    exit(1)
+
+setup_db()
+
+# JWT_SECRETはトークン発行に必要な鍵。
+# 必ず設定されている必要がある
+# added from https://github.com/spec-first/connexion/blob/main/examples/openapi3/reverseproxy/app.py
 class ReverseProxied:
     """Wrap the application in this middleware and configure the
     reverse proxy to add these headers, to let you quietly bind
@@ -42,7 +57,7 @@ class ReverseProxied:
             path_info = environ["PATH_INFO"]
             if path_info.startswith(script_name):
                 environ["PATH_INFO_OLD"] = path_info
-                environ["PATH_INFO"] = path_info[len(script_name) :]
+                environ["PATH_INFO"] = path_info[len(script_name):]
         scheme = environ.get("HTTP_X_SCHEME", "") or self.scheme
         if scheme:
             environ["wsgi.url_scheme"] = scheme
@@ -53,17 +68,19 @@ class ReverseProxied:
 
 
 def main():
-    app = connexion.App(__name__, specification_dir='./openapi/')
+    app = connexion.App(__name__, specification_dir="./openapi/")
     app.app.json_encoder = encoder.JSONEncoder
-    app.add_api('openapi.yaml',
-                arguments={'title': 'SyskenGacha-backend'},
-                pythonic_params=True)
+    app.add_api(
+        "openapi.yaml", arguments={"title": "SyskenGacha-backend"}, pythonic_params=True
+    )
     flask_app = app.app
-    proxied=ReverseProxied(flask_app)
+    proxied = ReverseProxied(flask_app)
     app.wsgi_app = proxied
 
     app.run(port=8080)
 
+# TODO: DBテーブル作成のインライン化
+# 環境変数未設定時にプロンプトを表示
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
